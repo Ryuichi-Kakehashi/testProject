@@ -30,7 +30,7 @@ const theme = createTheme({
 
 const Home = () => {
   //名前欄
-  const name = useRef("");
+  const name = useRef<HTMLInputElement>(null);
   //性別欄
   const defaultGender = ["男性", "女性", "その他"];
   const [gender, setGender] = useState(defaultGender[0]);
@@ -49,16 +49,15 @@ const Home = () => {
   //趣味欄
   const hobby = ["インドア", "アウトドア"];
   hobby.push("その他");
-  const obj = {};
+  const obj: any = {};
   hobby.map((v) => {
-    // @ts-expect-error
     return (obj[v] = false);
   });
   const [check, setCheck] = useState({ ...obj });
-  const otherHobby = useRef("");
+  const otherHobby = useRef<HTMLInputElement>(null);
 
   //備考欄
-  const other = useRef("");
+  const other = useRef<HTMLInputElement>(null);
 
   //エラー制御
   const [error, setError] = useState({ error: false, eMessage: "" });
@@ -79,7 +78,6 @@ const Home = () => {
 
   const changeName = () => {
     if (name.current) {
-      // @ts-expect-error TS(2339): Property 'validity' does not exist on type 'string... Remove this comment to see the full error message
       name.current.validity.patternMismatch
         ? setError({ error: true, eMessage: "入力禁止文字が含まれています" })
         : setError({ error: false, eMessage: "" });
@@ -188,7 +186,7 @@ const Home = () => {
   const changeHobby = (e: any) => {
     setCheck(() => {
       const newobj = { ...check };
-      // @ts-expect-error
+
       newobj[e.target.value] = e.target.checked;
       return newobj;
     });
@@ -198,30 +196,24 @@ const Home = () => {
     if (error["error"]) {
       console.log("confirm:エラー");
     }
-    // @ts-expect-error
-    if (name.current.value !== "" && !error["error"]) {
-      // @ts-expect-error
+    if (name.current && name.current.value !== "" && !error["error"]) {
       console.log("名前:" + name.current.value);
       setError({ error: false, eMessage: "" });
       console.log("性別:" + gender);
       console.log(date);
-      // @ts-expect-error
-      const resultHobby = [];
+      const resultHobby: any[] = [];
       const newobj = { ...result };
       hobby.map((value) => {
         return (
-          // @ts-expect-error
           check[value] &&
           // @ts-expect-error
           console.log(value + ":" + check[value]) & resultHobby.push(value)
         );
       });
       newobj["hobby"] = "";
-      // @ts-expect-error
       resultHobby.map((value) => {
         newobj["hobby"] = newobj["hobby"] + value + "、";
       });
-      // @ts-expect-error
       check["その他"] &&
         // @ts-expect-error
         otherHobby.current.value !== undefined &&
@@ -235,7 +227,6 @@ const Home = () => {
         newobj["hobby"].length - 1
       );
       if (
-        // @ts-expect-error
         check["その他"] &&
         // @ts-expect-error
         otherHobby.current.value !== undefined &&
@@ -247,7 +238,6 @@ const Home = () => {
           newobj["hobby"] + "(" + otherHobby.current.value + ")";
       // @ts-expect-error
       other.current.value !== "" && console.log("備考:" + other.current.value);
-      // @ts-expect-error
       newobj["name"] = name.current.value;
       newobj["gender"] = gender;
       newobj["date"] = date["y"] + "年" + date["m"] + "月" + date["d"] + "日";
@@ -274,7 +264,7 @@ const Home = () => {
           alignItems: "center",
         }}
       >
-        {/* <Box
+        <Box
           sx={{
             mt: 10,
             display: "flex",
@@ -326,10 +316,10 @@ const Home = () => {
               );
             })}
           </RadioGroup>
-        </Box> */}
+        </Box>
 
         <Typography variant="h6">誕生日</Typography>
-        {/* <Box
+        <Box
           sx={{
             mt: 0,
             display: "flex",
@@ -344,9 +334,9 @@ const Home = () => {
             defaultMonth.slice(0, monthSt)
           )}
           {SelectForm(date["d"], "d", changeDate, defaultDay.slice(0, daySt))}
-        </Box> */}
+        </Box>
 
-        {/* <Box
+        <Box
           sx={{
             mt: 2,
             display: "flex",
@@ -366,22 +356,19 @@ const Home = () => {
               />
             ))}
           </FormGroup>
-          {
-            // @ts-expect-error
-            check["その他"] === true && (
-              <TextField
-                color="primary"
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: 1,
-                  border: 1,
-                  borderColor: "gray",
-                }}
-                inputProps={{ maxLength: 20 }}
-                inputRef={otherHobby}
-              />
-            )
-          }
+          {check["その他"] === true && (
+            <TextField
+              color="primary"
+              sx={{
+                bgcolor: "white",
+                borderRadius: 1,
+                border: 1,
+                borderColor: "gray",
+              }}
+              inputProps={{ maxLength: 20 }}
+              inputRef={otherHobby}
+            />
+          )}
         </Box>
 
         <TextField
@@ -452,7 +439,7 @@ const Home = () => {
               </Button>
             </Box>
           </Box>
-        </Modal> */}
+        </Modal>
       </Box>
     </ThemeProvider>
   );
