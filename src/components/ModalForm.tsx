@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 
 export default function ModalForm(item: any) {
-  const items = (name: any, value: any) => {
+  const items = (name: string, value: string) => {
     return (
       <Box
         sx={{

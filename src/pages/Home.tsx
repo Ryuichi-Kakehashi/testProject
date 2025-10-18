@@ -1,24 +1,13 @@
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  TextField,
-  Typography,
-  RadioGroup,
-  Radio,
-  Modal,
-} from "@mui/material";
+import axios from "axios";
+
+import { Box, TextField, Button, Typography, Modal } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { createTheme } from "@mui/material/styles";
 import { ThemeProvider } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SelectForm from "../components/SelectForm";
-import ModalForm from "../components/ModalForm";
 
 const theme = createTheme({
   palette: {
@@ -28,231 +17,44 @@ const theme = createTheme({
   },
 });
 
+type User = {
+  id: number;
+  name: string;
+  gender: string;
+  birthdate: string;
+  hobby: string;
+  other: string;
+};
+
 const Home = () => {
   //名前欄
-  const name = useRef<HTMLInputElement>(null);
-  //性別欄
-  const defaultGender = ["男性", "女性", "その他"];
-  const [gender, setGender] = useState(defaultGender[0]);
+  const searchName = useRef<HTMLInputElement>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
-  //生年月日欄
-  const now = new Date();
-  const defaultYear = new Array(102)
-    .fill(1)
-    .map((_, i) => -i + now.getFullYear());
-  const defaultMonth = new Array(12).fill(1).map((_, i) => i + 1);
-  const [monthSt, setMonthSt] = useState(now.getMonth() + 1);
-  const defaultDay = new Array(31).fill(1).map((_, i) => i + 1);
-  const [daySt, setDaySt] = useState(31);
-  if (now.getMonth() === 0) setDaySt(now.getDate());
-  const [date, setdate] = useState({ y: now.getFullYear(), m: 1, d: 1 });
-  //趣味欄
-  const hobby = ["インドア", "アウトドア"];
-  hobby.push("その他");
-  const obj: any = {};
-  hobby.map((v) => {
-    return (obj[v] = false);
-  });
-  const [check, setCheck] = useState({ ...obj });
-  const otherHobby = useRef<HTMLInputElement>(null);
-
-  //備考欄
-  const other = useRef<HTMLInputElement>(null);
-
-  //エラー制御
-  const [error, setError] = useState({ error: false, eMessage: "" });
-
-  //モーダル制御
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  //取得データ
-  const [result, setresult] = useState({
-    name: "",
-    gender: "",
-    date: "",
-    hobby: "",
-    other: "",
-  });
+  useEffect(() => {
+    axios
+      .get<User[]>("http://localhost:3001/api/data")
+      .then((res) => setUsers(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const navigate = useNavigate();
 
-  const changeName = () => {
-    if (name.current) {
-      name.current.validity.patternMismatch
-        ? setError({ error: true, eMessage: "入力禁止文字が含まれています" })
-        : setError({ error: false, eMessage: "" });
-    }
-  };
-
-  const changeDate = (e: any) => {
-    setdate(() => {
-      const newobj = { ...date };
-      // @ts-expect-error
-      newobj[e.target.name] = parseInt(e.target.value);
-      return newobj;
-    });
-    switch (e.target.name) {
-      case "y":
-        dateset(date["m"], e.target.value);
-        if (date["m"] === 2 && e.target.value % 4 === 0) {
-          setDaySt(29);
-          if (date["d"] > 29) {
-            setdate((prev) => {
-              const newobj = { ...prev };
-              newobj["d"] = 1;
-              return newobj;
-            });
-          }
-        }
-        if (parseInt(e.target.value) === now.getFullYear()) {
-          setMonthSt(now.getMonth() + 1);
-          if (date["m"] > now.getMonth() + 1) {
-            setdate((prev) => {
-              const newobj = { ...prev };
-              newobj["m"] = 1;
-              if (date["d"] > 31) {
-                newobj["d"] = 1;
-              }
-              return newobj;
-            });
-            setDaySt(31);
-          }
-        } else if (monthSt !== 12) {
-          setMonthSt(12);
-        }
-        break;
-      case "m":
-        dateset(e.target.value, date["y"]);
-        if (parseInt(e.target.value) === now.getMonth() + 1) {
-          setDaySt(now.getDate());
-          if (date["d"] > now.getDate()) {
-            setdate((prev) => {
-              const newobj = { ...prev };
-              newobj["d"] = 1;
-              return newobj;
-            });
-          }
-        }
-        break;
-      case "d":
-        break;
-    }
-  };
-
-  const dateset = (setm: number, sety: number) => {
-    switch (setm) {
-      case 2:
-        setDaySt(28);
-        if (sety % 4 === 0) {
-          setDaySt(29);
-          if (date["d"] > 29) {
-            setdate((prev) => {
-              const newobj = { ...prev };
-              newobj["d"] = 1;
-              return newobj;
-            });
-          }
-          break;
-        }
-        if (date["d"] > 28) {
-          setdate((prev) => {
-            const newobj = { ...prev };
-            newobj["d"] = 1;
-            return newobj;
-          });
-        }
-        break;
-      case 4:
-      case 6:
-      case 9:
-      case 11:
-        setDaySt(30);
-        if (date["d"] > 30) {
-          setdate((prev) => {
-            const newobj = { ...prev };
-            newobj["d"] = 1;
-            return newobj;
-          });
-        }
-        break;
-      default:
-        if (daySt !== 31) {
-          setDaySt(31);
-        }
-        break;
-    }
-  };
-
-  const changeHobby = (e: any) => {
-    setCheck(() => {
-      const newobj = { ...check };
-
-      newobj[e.target.value] = e.target.checked;
-      return newobj;
-    });
-  };
-
-  const confirm = () => {
-    if (error["error"]) {
-      console.log("confirm:エラー");
-    }
-    if (name.current && name.current.value !== "" && !error["error"]) {
-      console.log("名前:" + name.current.value);
-      setError({ error: false, eMessage: "" });
-      console.log("性別:" + gender);
-      console.log(date);
-      const resultHobby: any[] = [];
-      const newobj = { ...result };
-      hobby.map((value) => {
-        return (
-          check[value] &&
-          // @ts-expect-error
-          console.log(value + ":" + check[value]) & resultHobby.push(value)
-        );
-      });
-      newobj["hobby"] = "";
-      resultHobby.map((value) => {
-        newobj["hobby"] = newobj["hobby"] + value + "、";
-      });
-      check["その他"] &&
-        // @ts-expect-error
-        otherHobby.current.value !== undefined &&
-        // @ts-expect-error
-        otherHobby.current.value !== "" &&
-        // @ts-expect-error
-        console.log("その他趣味:" + otherHobby.current.value);
-
-      newobj["hobby"] = newobj["hobby"].substring(
-        0,
-        newobj["hobby"].length - 1
+  const handleSearch = async () => {
+    const keyword = searchName.current?.value || "";
+    try {
+      const res = await axios.get<User[]>(
+        `http://localhost:3001/api/search?name=${encodeURIComponent(keyword)}`
       );
-      if (
-        check["その他"] &&
-        // @ts-expect-error
-        otherHobby.current.value !== undefined &&
-        // @ts-expect-error
-        otherHobby.current.value !== ""
-      )
-        newobj["hobby"] =
-          // @ts-expect-error
-          newobj["hobby"] + "(" + otherHobby.current.value + ")";
-      // @ts-expect-error
-      other.current.value !== "" && console.log("備考:" + other.current.value);
-      newobj["name"] = name.current.value;
-      newobj["gender"] = gender;
-      newobj["date"] = date["y"] + "年" + date["m"] + "月" + date["d"] + "日";
-      // @ts-expect-error
-      newobj["other"] = other.current.value;
-      setresult({ ...newobj });
-      setModalOpen(true);
-      console.log("confirm:正常動作");
-    } else if (!error["error"]) {
-      setError({ error: true, eMessage: "必須項目です" });
-      console.log("confirm:エラー");
+      setUsers(res.data);
+    } catch (err) {
+      console.error("検索エラー:", err);
+      alert("検索に失敗しました");
     }
   };
-
-  // const item = new Array(31).fill(1).map((_, i) => i + 1);
 
   return (
     <ThemeProvider theme={theme}>
@@ -273,9 +75,6 @@ const Home = () => {
           }}
         >
           <TextField
-            error={error["error"]}
-            required
-            label="名前"
             color="primary"
             sx={{
               bgcolor: "white",
@@ -283,118 +82,113 @@ const Home = () => {
               border: 1,
               borderColor: "gray",
             }}
-            inputRef={name}
-            onChange={changeName}
+            inputRef={searchName}
             inputProps={{
               maxLength: 20,
               pattern: "^[a-zA-Zぁ-んァ-ヶ一-龠_ 　]+$",
             }}
           />
-          {error["error"] && (
-            <Typography sx={{ color: "red" }} variant="body2">
-              {error["eMessage"]}
-            </Typography>
-          )}
+          <Button
+            variant="contained"
+            sx={{ mt: 3, width: 120, bgcolor: "#0077b6" }}
+            onClick={handleSearch}
+          >
+            検索
+          </Button>
         </Box>
-
-        <Box>
-          <RadioGroup
-            row
-            defaultValue={defaultGender[0]}
-            onChange={(e) => {
-              setGender(e.target.value);
+      </Box>
+      <Box
+        sx={{
+          mt: 5,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{ mt: 3, width: 120, bgcolor: "#0077b6" }}
+          onClick={() => {
+            navigate("/confirm");
+          }}
+        >
+          登録へ
+        </Button>
+      </Box>
+      <Box
+        sx={{
+          mt: 5,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {users.map((user) => (
+          <Box
+            key={user.id}
+            sx={{
+              mt: 2,
+              bgcolor: "white",
+              p: 2,
+              mb: 2,
+              width: 400,
+              borderRadius: 1,
+              border: 1,
+              borderColor: "gray",
             }}
           >
-            {defaultGender.map((value) => {
-              return (
-                <FormControlLabel
-                  value={value}
-                  control={<Radio value={value} />}
-                  label={value}
-                  key={value}
-                />
-              );
-            })}
-          </RadioGroup>
-        </Box>
+            <Typography>名前: {user.name}</Typography>
+            <Typography>性別: {user.gender}</Typography>
 
-        <Typography variant="h6">誕生日</Typography>
-        <Box
-          sx={{
-            mt: 0,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          {SelectForm(date["y"], "y", changeDate, defaultYear)}
-          {SelectForm(
-            date["m"],
-            "m",
-            changeDate,
-            defaultMonth.slice(0, monthSt)
-          )}
-          {SelectForm(date["d"], "d", changeDate, defaultDay.slice(0, daySt))}
-        </Box>
-
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h6">趣味</Typography>
-          <FormGroup>
-            {hobby.map((value) => (
-              <FormControlLabel
-                control={
-                  <Checkbox size="small" onChange={changeHobby} value={value} />
-                }
-                label={value}
-                key={value}
-              />
-            ))}
-          </FormGroup>
-          {check["その他"] === true && (
-            <TextField
-              color="primary"
+            <Box
               sx={{
-                bgcolor: "white",
-                borderRadius: 1,
-                border: 1,
-                borderColor: "gray",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 1,
+                mt: 2,
               }}
-              inputProps={{ maxLength: 20 }}
-              inputRef={otherHobby}
-            />
-          )}
-        </Box>
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  setSelectedUser(user);
+                  setModalOpen(true);
+                }}
+              >
+                詳細
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={async () => {
+                  if (window.confirm("本当に削除しますか？")) {
+                    console.log(user);
+                    try {
+                      await axios.delete(
+                        `http://localhost:3001/api/data/${user.id}`
+                      );
+                      // 再読み込みして一覧を更新
+                      const res = await axios.get<User[]>(
+                        "http://localhost:3001/api/data"
+                      );
+                      setUsers(res.data);
+                    } catch (err) {
+                      console.error("削除エラー:", err);
+                      alert("削除に失敗しました");
+                    }
+                  }
+                }}
+              >
+                削除
+              </Button>
+            </Box>
+          </Box>
+        ))}
+      </Box>
 
-        <TextField
-          label="備考"
-          color="primary"
-          multiline
-          sx={{
-            mt: 2,
-            bgcolor: "white",
-            borderRadius: 1,
-            border: 1,
-            borderColor: "gray",
-          }}
-          inputRef={other}
-          inputProps={{ maxLength: 140 }}
-        />
-
-        <Button
-          sx={{ mt: 2, textTransform: "none" }}
-          onClick={confirm}
-          variant="contained"
-        >
-          confirm
-        </Button>
-
-        <Modal open={modalOpen} sx={{ overflowY: "scroll" }}>
+      {selectedUser && (
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
           <Box
             sx={{
               display: "flex",
@@ -426,23 +220,25 @@ const Home = () => {
                   <CloseIcon />
                 </IconButton>
               </Box>
-              {ModalForm(result)}
-              <Button
-                sx={{}}
-                variant="contained"
-                onClick={() => {
-                  navigate("/result", { state: result });
-                  console.log("OK:正常動作");
-                }}
-              >
-                OK
-              </Button>
+
+              <Typography variant="h6" gutterBottom>
+                ユーザー詳細
+              </Typography>
+              <Typography>名前: {selectedUser.name}</Typography>
+              <Typography>性別: {selectedUser.gender}</Typography>
+              <Typography>誕生日: {selectedUser.birthdate}</Typography>
+              <Typography>趣味: {selectedUser.hobby || "なし"}</Typography>
+              <Typography>その他: {selectedUser.other || "なし"}</Typography>
+              <Box sx={{ textAlign: "right", mt: 2 }}>
+                <Button variant="contained" onClick={() => setModalOpen(false)}>
+                  閉じる
+                </Button>
+              </Box>
             </Box>
           </Box>
         </Modal>
-      </Box>
+      )}
     </ThemeProvider>
   );
 };
-
 export default Home;
