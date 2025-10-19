@@ -14,3 +14,9 @@ CREATE TABLE users (
 SHOW TABLES;
 
 DESCRIBE users;
+
+
+INSERT INTO users (name, gender, birthdate)
+VALUES ('田中太郎', '男', '1990年1月1日');
+
+SELECT * FROM users;
